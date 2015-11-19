@@ -4,7 +4,8 @@
 <html class="no-js">
 <head>
     <meta charset="utf-8" />
-    <title>Home - Coder Bounty</title>
+    <meta name="viewport" content="width=1190"/>
+    <title>{% block title %}{% endblock %} Coderbounty - Post bounties on code issues</title>
     <!-- Meta Tags -->
     <meta name="description" content="">
     <!-- Favicon -->
@@ -25,15 +26,10 @@
             html5elements()
         </script>
     <![endif]-->
-    <script>
-        $(document).ready(function() {
-            
-        });
-    </script>
 </head>
 <body>
     <!-- Header -->
-    <header class="header">
+    <header class="header wrapper-section">
         <div class="wrapper-global">
             <!-- logo -->
             <a class="logo" href="/">
@@ -79,7 +75,7 @@
     {% block content %}{% endblock %}
 
     <!-- Footer -->
-    <footer class="footer">
+    <footer class="footer wrapper-section">
         <div class="footer-symbol"></div>
         <div class="copyrights">
             <div class="wrapper-global">
@@ -93,6 +89,7 @@
         </div>
     </footer>
 
+    
     <script>
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
   (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -102,6 +99,6 @@
   ga('create', 'UA-66636003-1', 'auto');
   ga('send', 'pageview');
 
-</script>
+    </script>
 </body>
 </html>

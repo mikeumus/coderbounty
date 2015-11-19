@@ -39,16 +39,17 @@
                             <!--info-->
                             <div class="issue-info clearfix">
                                 <div class="side-info">
-                                    <a href="#" class="img-holder"><img src="{% static "images/temp/thumb-github.jpg" %}" alt="" /></a>
+                                    <a href="/issue/{{issue.id}}" class="img-holder"><img src="{% static "images/temp/thumb-github.jpg" %}" alt="" /></a>
                                     <p class="price">${{issue.bounty}}</p>
                                     <form>
                                         <button class="ribbon ribbon-normal ribbon-03 ribbon-brown-dark">Add $</button>
                                     </form>
                                 </div>
                                 <div class="text">
-                                    <div class="issue-status">
+                                    <!-- hide until we have all icons <div class="issue-status">
                                         <span class="icon-custom_yes"></span>
                                     </div>
+                                    -->
                                     <ul class="issue-id">
                                         <li class="number">#{{issue.number}}</li>
                                         <li class="owner">{{issue.project}}</li>
@@ -56,16 +57,16 @@
                                     <h3>{{issue.title}}</h3>
                                     <p>{{issue.content}}</p>
                                     <div class="logo-tech">
-                                        <img src="{{ STATIC_URL }}images/logos/logo-{{issue.language|slugify}}.png" alt="{{issue.language}}" />
+                                        <img src="{{ STATIC_URL }}images/logos/logo-{{issue.language|slugify}}.png" alt=" {{issue.language}}" />
                                     </div>
-                                    <div class="posted"><em>First posted: <time>{{issue.created.date}}</time></em></div>
+                                    <div class="posted"><em>Posted: <time>{{issue.created|date:"m/d/Y"}}</time></em> <em>Views: <time>{{issue.views}}</time></em></div>
                                 </div>
                             </div>
                             <!-- people -->
                             <div class="issue-people clearfix">
                                 <ul class="clearfix">
                                 {% for bounty in issue.bounties %}
-                                    <li><a href="/profile/{{bounty.user.username}}"><img src="{{bounty.user.userprofile.gravatar}}" alt="{{bounty.user.username}}" /></a></li>
+                                    <li><a href="/profile/{{bounty.user.username}}"><img src="{{bounty.user.userprofile.avatar}}" alt="{{bounty.user.username}}" /></a></li>
                                 {% endfor %}
                                 </ul>
                                 <div class="button-wrapper">
