@@ -25,7 +25,6 @@ SECRET_KEY = "ci7svvv6wp+5cyk3(ju6w*6v-xldo#an3e3zuvg&&7@v=4*2^c"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 ADMINS = (('Sean', 'sean@alphaonelabs.com'))
-TEMPLATE_DEBUG = True
 
 ALLOWED_HOSTS = []
 
@@ -33,13 +32,16 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = (
+    'material',
+    'material.frontend',
+    'material.admin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.sites',
+    'django.contrib.sites',  # The Django sites framework is required
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
@@ -65,14 +67,34 @@ MIDDLEWARE_CLASSES = (
     'rollbar.contrib.django.middleware.RollbarNotifierMiddleware',
 )
 
-TEMPLATE_CONTEXT_PROCESSORS = (
-    'django.contrib.auth.context_processors.auth',
-    'django.core.context_processors.request',
+TEMPLATE_CONTEXT_PROCESSORS = ( # DEPRICATED*  but requires for AllAuth for now: https://github.com/pennersr/django-allauth/issues/911#issuecomment-91035691
     'allauth.account.context_processors.account',
     'allauth.socialaccount.context_processors.socialaccount',
-    'django.contrib.messages.context_processors.messages',
-    'django.core.context_processors.static',
 )
+
+# TEMPLATE_DIRS is depricated in Django 1.8: 
+## https://docs.djangoproject.com/en/1.8/ref/settings/#dirs
+## https://docs.djangoproject.com/en/1.8/ref/settings/#templates
+## https://docs.djangoproject.com/en/1.8/intro/tutorial02/#customizing-your-project-s-templates
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'APP_DIRS': True,
+        'TEMPLATE_DEBUG': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.contrib.auth.context_processors.auth',
+                'django.core.context_processors.request',
+                'django.contrib.messages.context_processors.messages',
+                'django.core.context_processors.static',
+                'django.template.context_processors.debug',
+                'material.frontend.context_processors.modules',
+                'django.template.context_processors.request', # `allauth` needs this from django: http://django-allauth.readthedocs.org/en/latest/installation.html
+            ],
+        },
+    },
+]
 
 ROOT_URLCONF = 'coderbounty.urls'
 
@@ -82,8 +104,8 @@ AUTH_PROFILE_MODULE = 'UserProfile'
 
 
 AUTHENTICATION_BACKENDS = (
-    'django.contrib.auth.backends.ModelBackend',
-    'allauth.account.auth_backends.AuthenticationBackend',
+    'django.contrib.auth.backends.ModelBackend', # Needed to login by username in Django admin, regardless of `allauth`
+    'allauth.account.auth_backends.AuthenticationBackend', # `allauth` specific authentication methods, such as login by e-mail
 )
 
 
@@ -164,10 +186,6 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'static'),
-)
-
-TEMPLATE_DIRS = (
-    os.path.join(BASE_DIR, 'templates'),
 )
 
 

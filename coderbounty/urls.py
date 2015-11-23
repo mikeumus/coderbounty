@@ -6,6 +6,7 @@ from django.views.generic.base import TemplateView
 from rest_framework import routers, serializers, viewsets
 from website.models import Issue, Service
 from django.contrib.auth.models import User
+from material.frontend import urls as frontend_urls
 
 
 admin.autodiscover()
@@ -28,6 +29,7 @@ urlpatterns = patterns('',
     url(r'^profile/(?P<slug>[\w-]+)/$', UserProfileDetailView.as_view(), name="profile"),
     url(r'^robots.txt$', TemplateView.as_view(template_name='robots.txt')),
     url(r'^terms/$', 'website.views.terms', name='terms'),   
+    url(r'', include(frontend_urls)),
 )
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):

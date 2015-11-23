@@ -1,5 +1,6 @@
 {% load staticfiles %}
 {% load total %}
+
 <!DOCTYPE html>
 <html class="no-js">
 <head>
@@ -11,11 +12,14 @@
     <!-- Favicon -->
     <link rel="shortcut icon" type="image/x-icon" href="{{STATIC_URL}}images/favicon.ico">
     <!-- CSS -->
+    {% include 'material/includes/material_css.html' %}
     <link rel="stylesheet" href="{% static "css/style.css" %}" />
     <link rel="stylesheet" href="{% static "css/font.css" %}" />
     <!-- Icons -->
     <link rel="stylesheet" href="{% static "icons/coder-bounty/style.css" %}" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <!-- JS -->
+    {% include 'material/includes/material_js.html' %}
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
     <script src="{% static "js/modernizr/modernizr.custom.js" %}"></script>
     <script src="{% static "js/custom/custom-jQuery.js" %}"></script>

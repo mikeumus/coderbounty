@@ -29,7 +29,8 @@ html {
 	background:url('../images/layout/pattern-00.gif') repeat 0 0;}
 body {	
 	font:normal 15px/120% 'CalistoMtRegular',serif;
-	color:#675B4D;}
+	color:#675B4D;
+}
 a {
 	color:#A34B33;
 	text-decoration:none;}
@@ -38,7 +39,8 @@ a:hover {
 h1, h2, h3 {
 	font-family:'RegulatorsRegular',serif;
 	line-height:120%;
-	font-weight:normal;	
+	font-weight:normal;
+	letter-spacing: inherit;
 	color:#75857B;
 	-webkit-text-stroke: 0.05px;}
 h1 {font-size:40px;}
@@ -62,7 +64,10 @@ em {
 	cursor:pointer;}
 .center {
 	text-align: center;}
-
+ul, p{
+	line-height:18px;
+	font-size: 15px;
+}
 /*
 =====================
  LAYOUT =============
@@ -1514,4 +1519,11 @@ button.edit-profile{
 }
 span#email-help-text{
 	font-size: 0.8em;
+}
+
+/* surface pro media query via https://teamtreehouse.com/community/media-query-to-target-windows-surface-pro ----------- */
+@media only screen and ( max-device-height: 1280px){
+	.frame-dark-paper .frame-content:after{
+		background-position:-77px -157px;
+	}
 }
