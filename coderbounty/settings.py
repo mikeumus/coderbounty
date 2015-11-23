@@ -14,13 +14,12 @@ from django.http import Http404
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 
+# http://fearofcode.github.io/blog/2013/01/15/how-to-scrub-sensitive-information-from-django-settings-dot-py-files/
+from coderbounty.settings_secrets import *
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.7/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "ci7svvv6wp+5cyk3(ju6w*6v-xldo#an3e3zuvg&&7@v=4*2^c"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -70,6 +69,7 @@ MIDDLEWARE_CLASSES = (
 TEMPLATE_CONTEXT_PROCESSORS = ( # DEPRICATED*  but requires for AllAuth for now: https://github.com/pennersr/django-allauth/issues/911#issuecomment-91035691
     'allauth.account.context_processors.account',
     'allauth.socialaccount.context_processors.socialaccount',
+    'django.template.context_processors.request', # `allauth` needs this from django: http://django-allauth.readthedocs.org/en/latest/installation.html
 )
 
 # TEMPLATE_DIRS is depricated in Django 1.8: 
@@ -81,16 +81,16 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
-        'TEMPLATE_DEBUG': True,
         'OPTIONS': {
             'context_processors': [
                 'django.contrib.auth.context_processors.auth',
-                'django.core.context_processors.request',
-                'django.contrib.messages.context_processors.messages',
-                'django.core.context_processors.static',
                 'django.template.context_processors.debug',
+                'django.template.context_processors.i18n',
+                'django.template.context_processors.media',
+                'django.template.context_processors.static',
+                'django.template.context_processors.tz',
+                'django.contrib.messages.context_processors.messages',
                 'material.frontend.context_processors.modules',
-                'django.template.context_processors.request', # `allauth` needs this from django: http://django-allauth.readthedocs.org/en/latest/installation.html
             ],
         },
     },
@@ -140,7 +140,7 @@ if 'DATABASE_URL' in os.environ:
     DATABASES['default'] = dj_database_url.config()
     DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql_psycopg2'
     ROLLBAR = {
-        'access_token': 'f25f82658f7c493f8eeeb271a817345c',
+        'access_token': ROLLBAR_ACCESS_TOKEN,
         'environment': 'development' if DEBUG else 'production',
         'root': BASE_DIR,
         'exception_level_filters': [
@@ -178,8 +178,8 @@ ACCOUNT_USERNAME_REQUIRED = True
 
 
 WEPAY_IN_PRODUCTION = os.environ.get('WEPAY_IN_PRODUCTION', not DEBUG)
-WEPAY_ACCOUNT_ID = os.environ.get('WEPAY_ACCOUNT_ID', '941349')
-WEPAY_ACCESS_TOKEN = os.environ.get('WEPAY_ACCESS_TOKEN', 'STAGE_9c8476245785f470fd87b6bb1fad6ccb5c6cae5522337c378b7b0984d909401d')
+WEPAY_ACCOUNT_ID = os.environ.get('WEPAY_ACCOUNT_ID', WEPAY_ACCOUNT_NUMBER)
+WEPAY_ACCESS_TOKEN = os.environ.get('WEPAY_ACCESS_TOKEN', WEPAY_ACCESS_TOKEN_STAGE)
 
 STATIC_ROOT = 'staticfiles'
 STATIC_URL = '/static/'
