@@ -5,7 +5,7 @@ from django.core.mail import send_mail, EmailMultiAlternatives
 from django.conf import settings
 
 from string import Template
-from models import Service, Issue, Bounty
+from models import Service, Issue, Bounty, Taker, Comment
 from django.contrib.auth.models import User
 from django.db.models import Sum
 from urlparse import urlparse
@@ -13,7 +13,7 @@ import urllib
 from BeautifulSoup import BeautifulSoup
 import base64
 import cookielib
-import datetime
+import datetime, time
 import re
 #from django.utils 
 import json
@@ -35,33 +35,73 @@ def find_api_url(url):
 
 def leaderboard():
         return User.objects.filter(userprofile__balance__gt=0).order_by('-userprofile__balance')
-    
-def get_issue(request, url):
-    parsed_url = urlparse(url)
-    path_and_query = parsed_url.path+"?"+parsed_url.query
-    netloc = parsed_url.netloc
-    try:
-        service = Service.objects.get(domain=netloc)
-    except:
-        error = "Please enter a Github, Google Code or Bitbucket issue"
-        if not request:
-            return error
-        messages.error(request, error)
-        return False
-    template = Template(service.template)
-    regex = re.compile(service.regex)
-    r = regex.search(path_and_query)
-    try:
-        replaced_url = service.api_url+template.substitute(r.groupdict())
-    except Exception:
-        error = "I'm sorry, I couldn't find that "+service.name+" issue."
-        if not request:
-            return error
-        messages.error(request, error)
-        return False
-    data = r.groupdict()
-    req = urllib2.Request(replaced_url, None, {'Content-Type': 'application/' + service.type})
-    if service.name == "Bitbucket":
+
+
+class AbstractIssueHelper(object):
+
+    issue_data = []
+    service = None
+
+    def get_issue(self, request, url):
+        raise NotImplementedError("Please Implement this method")
+
+    def _get_api_request(self, request, url):
+        parsed_url = urlparse(url)
+        path_and_query = parsed_url.path+"?"+parsed_url.query
+        netloc = parsed_url.netloc
+        try:
+            service = Service.objects.get(domain=netloc)
+        except:
+            error = "Please enter a Github, Google Code or Bitbucket issue"
+            if not request:
+                return error
+            messages.error(request, error)
+            return False
+        template = Template(service.template)
+        regex = re.compile(service.regex)
+        r = regex.search(path_and_query)
+        try:
+            replaced_url = service.api_url+template.substitute(r.groupdict())
+        except Exception:
+            error = "I'm sorry, I couldn't find that "+service.name+" issue."
+            if not request:
+                return error
+            messages.error(request, error)
+            return False
+        self.issue_data = r.groupdict()
+        req = urllib2.Request(replaced_url, None, {'Content-Type': 'application/' + service.type})
+
+        return req
+
+
+class GithubIssueHelper(AbstractIssueHelper):
+
+    def get_issue(self, request, url):
+        req = self._get_api_request(request, url)
+
+        try:
+            result = json.load(urllib2.urlopen(req))
+        except Exception, e:
+            return str(e)
+
+        data = self.issue_data
+        data['status'] = result['state']
+        data['title'] = result['title']
+        data['content'] = result['body']
+        if "closed_by" in result:
+            data['closed_by'] = result['closed_by']
+        data['service'] = self.service.name
+        data['avatar_url'] = result['user']['avatar_url']
+
+        return data
+
+
+class BitbucketIssueHelper(AbstractIssueHelper):
+
+    def get_issue(self, request, url):
+        req = self._get_api_request(request, url)
+        data = self.issue_data
+
         try:
             result = json.load(urllib2.urlopen(req))
         except Exception, e:
@@ -74,9 +114,17 @@ def get_issue(request, url):
         data['status'] = (result['status'] == "new" or result['status'] == "open") and "open" or "closed"
         data['title'] = result['title']
         data['content'] = result['content']
-        data['service'] = service.name
+        data['service'] = self.service.name
 
-    elif service.name == "Google Code":
+        return data
+
+
+class GoogleCodeIssueHelper(AbstractIssueHelper):
+
+    def get_issue(self, request, url):
+        req = self._get_api_request(request, url)
+        data = self.issue_data
+
         try:
             url = urllib2.urlopen(req)
             xml = url.read()
@@ -92,23 +140,32 @@ def get_issue(request, url):
         data['status'] = (status == "new" or status == "open" or status == "accepted" or status == "started") and "open" or "closed"
         data['title'] = doc.find("entry").find("title").contents[0]
         data['content'] = doc.find("content").contents[0]
-        data['service'] = service.name
+        data['service'] = self.service.name
 
-    elif service.name == "Github":
-        try:
-            result = json.load(urllib2.urlopen(req))
-        except Exception, e:
-            return str(e)
+        return data
 
-        data['status'] = result['state']
-        data['title'] = result['title']
-        data['content'] = result['body']
-        if "closed_by" in result:
-            data['closed_by'] = result['closed_by']
-        data['service'] = service.name
-        data['avatar_url'] = result['user']['avatar_url']
 
-    return data
+def get_helper_instance(service, type):
+    # ex.: converts "Google Code" to "GoogleCode"
+    helper_name = ''.join([x.title() for x in service.name.split(' ')])
+    helper = globals()['{}{}'.format(helper_name, type)]()
+    helper.service = service
+    return helper
+
+
+def get_issue_helper(request, url):
+    parsed_url = urlparse(url)
+
+    try:
+        service = Service.objects.get(domain=parsed_url.netloc)
+    except Service.DoesNotExist:
+        messages.error(request, 'Not specified service')
+        return False
+
+    helper = get_helper_instance(service, 'IssueHelper')
+
+    return helper
+
 
 def add_issue_to_database(request):
 
@@ -248,7 +305,7 @@ def get_facebook_count():
 
 def create_comment(issue=None, comment=None):
     if not comment:
-        comment = "A bounty has been placed on this issue, check it out at Coder Bounty! http://coderbounty.com/#"+str(issue.id)
+        comment = "Coderbounty posted: http://coderbounty.com/issue/"+str(issue.id)
     #see if we've commented already and just update
     #try to have one comment that we update
     return globals()["post_"+issue.service.name.replace(" ", "_").lower()+"_comment"](issue, comment)
@@ -336,3 +393,84 @@ def post_to_slack(bounty):
 
         url = 'https://hooks.slack.com/services/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'
         r = requests.post(url, data=json.dumps(payload))
+
+def submit_issue_taker(data):
+    issueID = data["issue"]
+    user = data["user"]
+    issuetakenTime = data["issueStartTime"]
+    issueTaker = data["user"]
+    issueEndtime = issuetakenTime + datetime.timedelta(hours=24)
+    issue = Issue.objects.get(pk=issueID)
+    issue.status = "taken"
+    issue.save()
+    taker = Taker(is_taken=True,issu_id=issueID,issue=issue,user=user,status="taken",issueTaken=issuetakenTime,issueEnd=issueEndtime)
+    taker.save()
+    return data
+
+def timecounter(issuetakenTime, duration):
+    pass
+
+
+# time.struct_time(tm_year=2015, tm_mon=11, tm_mday=22, tm_hour=17, tm_min=25, tm_sec=21, tm_wday=6, tm_yday=326, tm_isdst=-1)
+
+
+class AbstractCommentHelper(object):
+
+    service = None
+
+    def load_comments(self, issue):
+        raise NotImplementedError('Please Implement this method')
+
+    def sync_comments(self, issue):
+        raise NotImplementedError('Please Implement this method')
+
+    def post_comment(self, issue, comment):
+        raise NotImplementedError('Please Implement this method')
+
+
+class GithubCommentHelper(AbstractCommentHelper):
+
+    def load_comments(self, issue):
+        url = issue.api_url() + "/comments"
+        comments = issue.get_api_data(url)
+
+        for comment in comments:
+            Comment.objects.create(issue=issue, content=comment['body'],
+                                   service_comment_id=comment['id'], username=comment['user']['login'],
+                                   created=comment['created_at'], updated=comment['updated_at'])
+
+    def sync_comments(self, issue):
+        pass
+
+    def post_comment(self, issue, comment):
+        pass
+
+
+class BitbucketCommentHelper(AbstractCommentHelper):
+
+    def load_comments(self, issue):
+        pass
+
+    def sync_comments(self, issue):
+        pass
+
+    def post_comment(self, issue, comment):
+        pass
+
+
+class GoogleCodeCommentHelper(AbstractCommentHelper):
+
+    def load_comments(self, issue):
+        pass
+
+    def sync_comments(self, issue):
+        pass
+
+    def post_comment(self, issue, comment):
+        pass
+
+
+def get_comment_helper(service):
+    helper = get_helper_instance(service, 'CommentHelper')
+    return helper
+

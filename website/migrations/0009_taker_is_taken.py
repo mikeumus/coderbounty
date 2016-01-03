@@ -7,12 +7,13 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('website', '0009_auto_20151117_1000'),
+        ('website', '0012_taker'),
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='userprofile',
-            name='github_link',
+        migrations.AddField(
+            model_name='taker',
+            name='is_taken',
+            field=models.BooleanField(default=True),
         ),
     ]
