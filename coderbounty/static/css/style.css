@@ -85,14 +85,20 @@ ul, p{
 .header .wrapper-global {
 	position: relative;
     height:175px;}
+nav{
+	background: transparent;
+	width: initial;
+	box-shadow: none;
+}
 .navHeader {
 	position:absolute;
 	top:12px;
 	right:110px;}
 .navHeader li {
-	display:inline;
+	display:inline-block;
 	text-transform:uppercase;
-	margin:0 5px;}
+	margin:0 5px;
+}
 .navHeader li,
 .navHeader li a {
 	color:#463527;
@@ -1656,7 +1662,14 @@ span#email-help-text{
 	width: 100% !important;
 	padding: 10px !important;
 }
-
+.login-icon{
+	margin: -2px -5px auto 8px;
+	vertical-align: middle;
+}
+.signup button[type="submit"]{
+	padding: 7px 33px;
+	font-weight: bold;
+}
 #id_username{
 	width: 100% !important;
 }

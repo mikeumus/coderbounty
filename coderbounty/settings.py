@@ -81,7 +81,6 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
-        'TEMPLATE_DEBUG': True,
         'OPTIONS': {
             'context_processors': [
                 'django.contrib.auth.context_processors.auth',
@@ -92,6 +91,7 @@ TEMPLATES = [
                 'material.frontend.context_processors.modules',
                 'django.template.context_processors.request', # `allauth` needs this from django: http://django-allauth.readthedocs.org/en/latest/installation.html
             ],
+            'debug': DEBUG, # For Django >= 1.8 from http://stackoverflow.com/a/34298960/1762493
         },
     },
 ]
